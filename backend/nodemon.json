@@ -1,0 +1,9 @@
+{
+    "env": {
+      "NODE_ENV": "development"
+    },
+    "execMap": {
+      "js": "node --require dotenv/config"
+    }
+  }
+  
