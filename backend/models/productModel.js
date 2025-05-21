@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const reviewSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  title: String,
+  description: String,
+  rating: Number,
+  createdAt: { type: Date, default: Date.now },
+});
+
 const productSchema = new mongoose.Schema(
   {
     productName: {
@@ -31,15 +39,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       validate: (v) => Array.isArray(v) && v.length > 0,
     },
-    reviews: [
-      {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        title: String,
-        description: String,
-        rating: Number,
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
+    reviews: [reviewSchema],
     ratingCount: { type: Number, default: 0 },
     ratingSum: { type: Number, default: 0 },
     ratingAverage: { type: Number, default: 0 },

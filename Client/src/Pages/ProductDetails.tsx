@@ -7,6 +7,8 @@ import {
   FaCartPlus,
   FaCheckCircle,
   FaTimesCircle,
+  FaCommentDots,
+  FaUserCircle,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,8 +32,8 @@ interface Product {
   stock: number;
   inCart: boolean;
   inWatchlist: boolean;
-  averageRating: number;      
-  totalReviews: number;       
+  averageRating: number;
+  totalReviews: number;
   reviews?: Review[];
 }
 
@@ -150,12 +152,12 @@ const ProductDetailsPage = () => {
 
   const handleReviewSubmit = async () => {
     if (!product) return;
-  
+
     if (!reviewRating || !reviewTitle || !reviewDescription) {
       toast.error("Please fill in all review fields.");
       return;
     }
-  
+
     try {
       const reviewPayload = {
         productId: product._id,
@@ -163,7 +165,7 @@ const ProductDetailsPage = () => {
         title: reviewTitle,
         description: reviewDescription,
       };
-  
+
       await api.addReview(reviewPayload);
       toast.success("✅ Review submitted successfully!");
       setReviewRating(0);
@@ -175,7 +177,6 @@ const ProductDetailsPage = () => {
       toast.error("❌ Failed to submit review. Please try again.");
     }
   };
-  
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -208,7 +209,9 @@ const ProductDetailsPage = () => {
                 src={imgUrl}
                 alt={`Thumbnail ${index}`}
                 className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 ${
-                  mainImage === imgUrl ? "border-blue-600" : "border-transparent"
+                  mainImage === imgUrl
+                    ? "border-blue-600"
+                    : "border-transparent"
                 } hover:border-blue-500`}
                 onClick={() => setMainImage(imgUrl)}
               />
@@ -319,7 +322,9 @@ const ProductDetailsPage = () => {
           {/* Shipping Info */}
           <div className="mt-6 text-sm text-gray-600">
             <h3 className="font-semibold mb-1">Shipping & Returns</h3>
-            <p>Free shipping on orders over ₹2000. Delivery in 3–5 business days.</p>
+            <p>
+              Free shipping on orders over ₹2000. Delivery in 3–5 business days.
+            </p>
             <p className="mt-1">
               30-day return policy on unused items in original packaging.
             </p>
@@ -329,57 +334,110 @@ const ProductDetailsPage = () => {
 
       <hr className="my-10" />
 
-      {/* Reviews */}
-      <div>
-        <h3 className="text-xl font-bold mb-2">Customer Reviews</h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Share your thoughts. If you've used this product, share your experience.
+      {/* Reviews Section */}
+      {/* Reviews Section */}
+      <div className="mt-8">
+        <h3 className="text-2xl font-bold flex items-center gap-2 mb-3">
+          <FaCommentDots /> Customer Reviews
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Share your thoughts. If you've used this product, write a quick
+          review!
         </p>
+
         <button
           onClick={() => setShowReviewForm(!showReviewForm)}
-          className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+          className="mb-6 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           {showReviewForm ? "Cancel Review" : "Write a Review"}
         </button>
 
-        {showReviewForm && (
-          <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-            <div className="mb-2 font-medium">Your Rating:</div>
-            <div className="flex mb-2">
-              {[...Array(5)].map((_, i) => {
-                const starIndex = i + 1;
-                return (
-                  <span key={i} onClick={() => setReviewRating(starIndex)}>
-                    {reviewRating >= starIndex ? (
-                      <FaStar className="text-yellow-400 mr-1 cursor-pointer" />
-                    ) : (
-                      <FaRegStar className="text-yellow-400 mr-1 cursor-pointer" />
-                    )}
-                  </span>
-                );
-              })}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Review Form (Left) */}
+          {showReviewForm && (
+            <div className="md:w-1/2 w-full bg-gray-100 p-6 rounded-lg">
+              <h4 className="text-lg font-semibold mb-3">Write a Review</h4>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_, i) => {
+                  const starIndex = i + 1;
+                  return (
+                    <span key={i} onClick={() => setReviewRating(starIndex)}>
+                      {reviewRating >= starIndex ? (
+                        <FaStar className="text-yellow-400 text-xl cursor-pointer" />
+                      ) : (
+                        <FaRegStar className="text-yellow-400 text-xl cursor-pointer" />
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                placeholder="Review Title"
+                className="w-full mb-3 p-2 rounded border"
+                value={reviewTitle}
+                onChange={(e) => setReviewTitle(e.target.value)}
+              />
+              <textarea
+                rows={4}
+                placeholder="Write your review here..."
+                className="w-full mb-4 p-2 rounded border"
+                value={reviewDescription}
+                onChange={(e) => setReviewDescription(e.target.value)}
+              />
+              <button
+                onClick={handleReviewSubmit}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Submit Review
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="Review title"
-              className="w-full p-2 border rounded mb-2"
-              value={reviewTitle}
-              onChange={(e) => setReviewTitle(e.target.value)}
-            />
-            <textarea
-              placeholder="Write your review..."
-              className="w-full p-2 border rounded mb-2"
-              value={reviewDescription}
-              onChange={(e) => setReviewDescription(e.target.value)}
-            ></textarea>
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              onClick={handleReviewSubmit}
-            >
-              Submit Review
-            </button>
+          )}
+
+          {/* Reviews List (Right) */}
+          <div className={`md:w-1/2 w-full ${!showReviewForm ? "w-full" : ""}`}>
+            {product.reviews && product.reviews.length > 0 ? (
+              <div className="space-y-6">
+                {product.reviews.map((review, index) => (
+                  <div
+                    key={index}
+                    className="p-5 bg-white border rounded-md shadow-sm"
+                  >
+                    <div className="flex items-center mb-2 gap-2 text-yellow-400">
+                      {[...Array(5)].map((_, i) =>
+                        i < review.rating ? (
+                          <FaStar key={i} />
+                        ) : (
+                          <FaRegStar key={i} />
+                        )
+                      )}
+                      <span className="text-xs text-gray-500 ml-auto">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-semibold mb-1">
+                      {review.title}
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      {review.description}
+                    </p>
+                    <div className="mt-2 text-xs text-gray-500 flex items-center gap-2">
+                      <FaUserCircle />
+                      {review.userName || "Anonymous"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 bg-gray-50 p-6 rounded-lg mt-4">
+                <p className="text-lg font-medium">No reviews yet!</p>
+                <p className="text-sm">
+                  Be the first to share your experience 📝
+                </p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

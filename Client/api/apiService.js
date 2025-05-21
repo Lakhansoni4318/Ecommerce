@@ -29,6 +29,10 @@ export default {
     return api.post("/products/add-review", data);
   },
 
+    getReviews(productId) {
+    return api.get(`/products/product-reviews/${productId}`);
+  },
+
   fetchAllProducts(data) {
     return api.post("/products/all-products",data);
   },
