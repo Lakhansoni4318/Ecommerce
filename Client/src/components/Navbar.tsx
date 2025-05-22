@@ -24,7 +24,7 @@ const Navbar = () => {
   useEffect(() => {
     const userString = localStorage.getItem("user");
     const user = userString ? JSON.parse(userString) : null;
-    setIsSeller(user.accountType === "Seller");
+    setIsSeller(user?.accountType === "Seller");
     setIsLoggedIn(!!localStorage.getItem("token"));
   }, [token]);
 

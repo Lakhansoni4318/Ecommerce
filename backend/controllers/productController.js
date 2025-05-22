@@ -234,3 +234,64 @@ exports.addReview = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.multipleProductDetails = async (req, res) => {
+  try {
+    const productRequests = req.body;
+    const userId = req.user?.userId;
+
+    if (!Array.isArray(productRequests) || productRequests.length === 0) {
+      return res.status(400).json({ message: "Request must be a non-empty array of productId and quantity." });
+    }
+
+    const productIds = productRequests.map((item) => item.productId);
+    const products = await Product.find({ _id: { $in: productIds } }).populate(
+      "reviews.userId",
+      "name email"
+    );
+
+    if (!products.length) {
+      return res.status(404).json({ message: "No products found for the provided IDs." });
+    }
+
+    const cart = userId ? await Cart.findOne({ userId }) : null;
+    const watchlist = userId ? await Watchlist.findOne({ userId }) : null;
+
+    const detailedProducts = products.map((product) => {
+      const matchingItem = productRequests.find(
+        (item) => item.productId.toString() === product._id.toString()
+      );
+
+      const quantity = matchingItem?.quantity || 1;
+
+      const inCart = cart?.products.some(
+        (p) => p.productId.toString() === product._id.toString()
+      );
+
+      const inWatchlist = watchlist?.products.some(
+        (p) => p.productId.toString() === product._id.toString()
+      );
+
+      return {
+        ...product.toObject(),
+        quantity,
+        rating: product.rating || 0,
+        ratingCount: product.ratingCount || 0,
+        ratingAverage: product.ratingAverage || 0,
+        reviews: product.reviews || [],
+        inCart: !!inCart,
+        inWatchlist: !!inWatchlist,
+      };
+    });
+
+    return res.status(200).json({
+      total: detailedProducts.length,
+      products: detailedProducts,
+    });
+  } catch (error) {
+    console.error("Multiple Product Details Error:", error);
+    return res.status(500).json({
+      message: "Server error while retrieving product details.",
+    });
+  }
+};

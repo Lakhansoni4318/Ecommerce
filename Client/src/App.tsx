@@ -86,7 +86,7 @@ const App = () => {
             }
           />
           <Route
-            path="/payment/:id"
+            path="/payment"
             element={
               <PrivateRoute>
                 <BookProductPage />
