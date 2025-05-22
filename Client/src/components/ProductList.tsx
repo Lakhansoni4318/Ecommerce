@@ -23,17 +23,17 @@ const ProductList = () => {
     fetchProducts();
   }, []);
 
-  const handleAddProduct = (newProduct: Product) => {
-    try {
-      const response = api.addProduct(newProduct);
-      alert('Product added successfully!');
-      console.log('Saved product:', response.data);
-    } catch (error: any) {
-      console.error('Failed to add product:', error);
-      alert(error.response?.data?.message || 'Something went wrong');
-    }
-    setIsAddingProduct(false);
-  };
+const handleAddProduct = async (newProduct: Product) => {
+  try {
+    await api.addProduct(newProduct);
+    alert('Product added successfully!');
+  } catch (error: any) {
+    console.error('Failed to add product:', error);
+    alert(error.response?.data?.message || 'Something went wrong');
+  }
+  setIsAddingProduct(false);
+};
+
 
   const filteredProducts = products.filter(prod =>
     prod.productName.toLowerCase().includes(searchQuery.toLowerCase())

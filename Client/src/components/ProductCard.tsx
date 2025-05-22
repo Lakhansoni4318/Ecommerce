@@ -4,7 +4,7 @@ import api from "../../api/apiService";
 
 interface ProductCardProps {
   discount?: number;
-  imageUrl: string[];
+  imageUrl: string;
   productCategory: string;
   stock: string;
   productName: string;
@@ -28,7 +28,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   _id,
 }) => {
   const navigate = useNavigate();
-
   const handleCardClick = () => {
     navigate(`/product/${_id}`);
   };
@@ -37,8 +36,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     try {
       const request = { productId: id };
-      const response = await api.addToCart(request);
-      console.log(response);
+      await api.addToCart(request);
     } catch (error) {
       console.error("Failed to add product to cart:", error);
     }

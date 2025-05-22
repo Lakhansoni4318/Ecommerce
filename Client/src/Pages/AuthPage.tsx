@@ -8,11 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import api from "../../api/apiService";
 
-interface AuthPageProps {
-  onLogin: () => void;
-}
-
-const AuthPage: React.FC<AuthPageProps> = () => {
+const AuthPage = () => {
   const [isSignIn, setIsSignIn] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +55,6 @@ const AuthPage: React.FC<AuthPageProps> = () => {
         password,
         accountType,
       });
-      console.log("Sign-up successful:", response);
       if (response?.data?.message?.toLowerCase().includes("otp sent")) {
         setShowOtpScreen(true);
       }
@@ -100,7 +95,6 @@ const AuthPage: React.FC<AuthPageProps> = () => {
       };
       const response = await api.verifyOtp(request);
 
-      console.log("OTP Verified:", response);
       localStorage.setItem("token", response.data.token);
       navigate("/");
     } catch (err) {

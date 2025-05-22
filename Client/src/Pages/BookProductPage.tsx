@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CreditCard,
   Truck,
-  DollarSign,
   Home,
   CalendarClock,
   LockKeyhole,
@@ -22,7 +21,14 @@ const BookProductPage = () => {
     expiry: "",
     cvv: "",
   });
-  const [product, setProduct] = useState(null);
+  type Product = {
+    imageUrls?: string[];
+    productName: string;
+    sellingPrice: number;
+    productDescription: string;
+  };
+  
+  const [product, setProduct] = useState<Product | null>(null);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -41,7 +47,7 @@ const BookProductPage = () => {
     if (id) fetchProduct();
   }, [id]);
 
-  const handleOrder = async (e) => {
+  const handleOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const orderData = {

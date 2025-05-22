@@ -1,15 +1,15 @@
 import api from "./siteConfig";
 
 export default {
-  signUp(data) {
+  signUp(data:any) {
     return api.post("/auth/signup", data);
   },
 
-  verifyOtp(data) {
+  verifyOtp(data:any) {
     return api.post("/auth/verify-otp", data);
   },
 
-  signIn(data) {
+  signIn(data:any) {
     return api.post("/auth/sign-in", data);
   },
 
@@ -21,31 +21,31 @@ export default {
     return api.get("/users")
   },
 
-  addProduct(data) {
+  addProduct(data:any) {
     return api.post("/products/add-product", data);
   },
 
-  addReview(data) {
+  addReview(data:any) {
     return api.post("/products/add-review", data);
   },
 
-    getReviews(productId) {
+    getReviews(productId:any) {
     return api.get(`/products/product-reviews/${productId}`);
   },
 
-  fetchAllProducts(data) {
+  fetchAllProducts(data:any) {
     return api.post("/products/all-products",data);
   },
 
-  productDetails(id) {
+  productDetails(id:any) {
     return api.get(`/products/product-details/${id}`);
   },
 
-  addToCart(data){
+  addToCart(data:any){
     return api.post("cart/add-to-cart" , data);
   },
 
-  removeFromCart(productId) {
+  removeFromCart(productId:any) {
     return api.delete(`cart/remove/${productId}`);
   },
 
@@ -53,7 +53,7 @@ export default {
     return api.get("cart");
   },
 
-  addWatchList(data) {
+  addWatchList(data:any) {
     return api.post("watchlist/add", data);
   },
 
@@ -61,11 +61,11 @@ export default {
     return api.get("watchlist");
   },
   
-  removeFromWatchList(productId) {
+  removeFromWatchList(productId:any) {
     return api.delete(`watchlist/remove/${productId}`);
   },
 
-  createOrder(data) {
+  createOrder(data:any) {
     return api.post("orders", data);
   },
   

@@ -12,7 +12,6 @@ exports.createOrder = async (req, res) => {
       expiry,
       cvv
     } = req.body;
-console.log(req)
     if (!req.user || !req.user.userId) {
       return res.status(401).json({ message: "User not authenticated" });
     }

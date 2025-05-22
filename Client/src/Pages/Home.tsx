@@ -8,11 +8,7 @@ import api from "../../api/apiService";
 const Home = () => {
   const getUserData = async () => {
     try {
-      debugger
       const response = await api.profile();
-      console.log("User profile:", response.data);
-      
-      // Store the entire user object in localStorage as a JSON string
       const userData = {
         username: response.data.user.username,
         email: response.data.user.email,
