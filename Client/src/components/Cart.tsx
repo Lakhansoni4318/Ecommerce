@@ -85,6 +85,11 @@ const Cart = () => {
     }
   };
 
+  const buyNow = async (id:string, quantity:number) => {
+    const payload = [{ productId: id, quantity }];
+    localStorage.setItem("cart", JSON.stringify(payload));
+    navigate("/payment");
+  };
   const updateCartToServer = async () => {
     try {
       const payload = cartItems.map((item) => ({
@@ -197,7 +202,7 @@ const Cart = () => {
                     ).toLocaleString()}
                   </div>
                   <button
-                    onClick={() => navigate(`/payment/${item.productId._id}`)}
+                    onClick={() => buyNow(item._id, item.quantity)}
                     className="mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow transition"
                   >
                     <FaCheckCircle />

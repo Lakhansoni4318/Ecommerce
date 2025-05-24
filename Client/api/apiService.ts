@@ -17,8 +17,16 @@ export default {
     return api.get("/users/profile");
   },
 
+  validateToken() {
+    return api.get("/users/check-token");
+  },
+
   getUsers() {
     return api.get("/users");
+  },
+
+  updateProfile(data: any) {
+    return api.put("/users/profile",data);
   },
 
   addProduct(data: any) {
@@ -33,16 +41,31 @@ export default {
     return api.get(`/products/product-reviews/${productId}`);
   },
 
+  getAllReviews() {
+    return api.get(`/products/reviews`);
+  },
+
   fetchAllProducts(data: any) {
     return api.post("/products/all-products", data);
   },
 
+  deleteProduct(productId: any) {
+    return api.delete(`products/${productId}`);
+  },
+
+  updateProduct(productId: string, updatedData: any) {
+    return api.put(`/products/${productId}`, updatedData);
+  },
   productDetails(id: any) {
     return api.get(`/products/product-details/${id}`);
   },
 
+  getCategoryStats() {
+    return api.get("/products/category-stats");
+  },
+
   productCartDetails(id: any) {
-    return api.post(`/products/products-details`,id);
+    return api.post(`/products/products-details`, id);
   },
 
   addToCart(data: any) {
@@ -62,15 +85,15 @@ export default {
   },
 
   addWatchList(data: any) {
-    return api.post("watchlist/add", data);
+    return api.post("Wishlist/add", data);
   },
 
   getWatchList() {
-    return api.get("watchlist");
+    return api.get("Wishlist");
   },
 
   removeFromWatchList(productId: any) {
-    return api.delete(`watchlist/remove/${productId}`);
+    return api.delete(`Wishlist/remove/${productId}`);
   },
 
   createOrder(data: any) {

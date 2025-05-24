@@ -12,7 +12,9 @@ const Home = () => {
       const userData = {
         username: response.data.user.username,
         email: response.data.user.email,
-        accountType: response.data.user.accountType
+        accountType: response.data.user.accountType,
+        phone: response.data.user.phone || "",
+        address: response.data.user.address || "",
       };
       localStorage.setItem("user", JSON.stringify(userData)); // Store as a string
 

@@ -21,16 +21,20 @@ type Product = {
   _id: string;
   productName: string;
   sellingPrice: number;
-  productDescription: string;
+  description: string;
   imageUrls?: string[];
   quantity: number; // updated from cart
   reviews?: Review[];
 };
 
 const BookProductPage = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [paymentType, setPaymentType] = useState("credit");
+  const storedUser = localStorage.getItem("user");
+  const user: any = storedUser ? JSON.parse(storedUser) : null;
+  const userEmail = user?.email || null;
+
+
   const [form, setForm] = useState({
     address: "",
     cardNumber: "",
@@ -47,7 +51,6 @@ const BookProductPage = () => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
       const parsedCart: CartItem[] = JSON.parse(storedCart);
-      setCartItems(parsedCart);
 
       const fetchProducts = async () => {
         try {
@@ -75,62 +78,62 @@ const BookProductPage = () => {
       fetchProducts();
     }
   }, []);
-const handleOrder = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleOrder = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  // Basic validation for card payment
-  if ((paymentType === "credit" || paymentType === "debit")) {
-    if (
-      !form.cardName.trim() ||
-      !form.cardNumber.trim() ||
-      !form.expiry.trim() ||
-      !form.cvv.trim()
-    ) {
-      toast.error("Please fill all card payment details");
-      return;
+    // Basic validation for card payment
+    if (paymentType === "credit" || paymentType === "debit") {
+      if (
+        !form.cardName.trim() ||
+        !form.cardNumber.trim() ||
+        !form.expiry.trim() ||
+        !form.cvv.trim()
+      ) {
+        toast.error("Please fill all card payment details");
+        return;
+      }
+      // Optional: Add more validations like card number length, expiry format, CVV length here
     }
-    // Optional: Add more validations like card number length, expiry format, CVV length here
-  }
 
-  const orderData = {
-    products: products.map((product) => ({
-      id: product._id,
-      name: product.productName,
-      price: product.sellingPrice,
-      image: product.imageUrls?.[0] || "",
-      quantity: product.quantity,
-    })),
-    address: form.address.trim(),
-    phone: form.phone.trim(),
-    paymentType,
-    // Include paymentDetails only for card payments
-    ...(paymentType === "credit" || paymentType === "debit"
-      ? {
-          paymentDetails: {
-            cardName: form.cardName.trim(),
-            cardNumber: form.cardNumber.trim(),
-            expiry: form.expiry.trim(),
-            cvv: form.cvv.trim(),
-          },
-        }
-      : {}),
+    const orderData = {
+      products: products.map((product) => ({
+        id: product._id,
+        name: product.productName,
+        price: product.sellingPrice,
+        image: product.imageUrls?.[0] || "",
+        quantity: product.quantity,
+      })),
+      address: form.address.trim(),
+      phone: form.phone.trim(),
+      email: userEmail || "",
+      paymentType,
+      // Include paymentDetails only for card payments
+      ...(paymentType === "credit" || paymentType === "debit"
+        ? {
+            paymentDetails: {
+              cardName: form.cardName.trim(),
+              cardNumber: form.cardNumber.trim(),
+              expiry: form.expiry.trim(),
+              cvv: form.cvv.trim(),
+            },
+          }
+        : {}),
+    };
+
+    try {
+      const response = await api.createOrder(orderData);
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Order placed successfully!");
+        localStorage.removeItem("cart");
+        navigate("/");
+      } else {
+        toast.error("Failed to place order");
+      }
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      toast.error("Order creation failed");
+    }
   };
-
-  try {
-    const response = await api.createOrder(orderData);
-    if (response.status === 200 || response.status === 201) {
-      toast.success("Order placed successfully!");
-      localStorage.removeItem("cart");
-      navigate("/");
-    } else {
-      toast.error("Failed to place order");
-    }
-  } catch (error) {
-    console.error("Order creation failed:", error);
-    toast.error("Order creation failed");
-  }
-};
-
 
   if (!products.length)
     return <div className="text-center py-10">Loading cart...</div>;
@@ -165,7 +168,7 @@ const handleOrder = async (e: React.FormEvent<HTMLFormElement>) => {
                   {product.productName}
                 </h3>
                 <p className="text-sm text-gray-500 line-clamp-2">
-                  {product.productDescription}
+                  {product.description}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-full">
@@ -257,7 +260,9 @@ const handleOrder = async (e: React.FormEvent<HTMLFormElement>) => {
                 placeholder="Card Number"
                 className="w-full px-4 py-3 border rounded-xl shadow-sm"
                 value={form.cardNumber}
-                onChange={(e) => setForm({ ...form, cardNumber: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, cardNumber: e.target.value })
+                }
                 required
               />
               <div className="flex gap-4">

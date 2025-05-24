@@ -1,12 +1,12 @@
 const Product = require("../models/productModel");
 const Cart = require("../models/CartModel");
-const Watchlist = require("../models/watchlistModel");
+const Wishlist = require("../models/watchlistModel");
 
 exports.addProduct = async (req, res) => {
   const {
     productName,
     productCategory,
-    productDescription,
+    description,
     costPrice,
     sellingPrice,
     stock,
@@ -17,7 +17,7 @@ exports.addProduct = async (req, res) => {
     if (
       !productName ||
       !productCategory ||
-      !productDescription ||
+      !description ||
       !costPrice ||
       !sellingPrice ||
       !stock ||
@@ -30,7 +30,7 @@ exports.addProduct = async (req, res) => {
     const newProduct = new Product({
       productName,
       productCategory,
-      productDescription,
+      description,
       costPrice,
       sellingPrice,
       stock,
@@ -50,6 +50,7 @@ exports.addProduct = async (req, res) => {
 
 exports.allProducts = async (req, res) => {
   const { id, category } = req.body;
+  const userId = req.user?.userId;
 
   try {
     if (id) {
@@ -64,12 +65,10 @@ exports.allProducts = async (req, res) => {
           .json({ message: "No product found with the provided ID." });
       }
 
-      return res
-        .status(400)
-        .json({
-          message:
-            "To fetch full details, please use the /product-details/:id endpoint.",
-        });
+      return res.status(400).json({
+        message:
+          "To fetch full details, please use the /product-details/:id endpoint.",
+      });
     }
 
     let query = {};
@@ -78,28 +77,42 @@ exports.allProducts = async (req, res) => {
     }
 
     const products = await Product.find(query).select(
-      "costPrice imageUrls productCategory productName sellingPrice stock"
+      "costPrice imageUrls productCategory productName sellingPrice stock description"
     );
 
     if (products.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message: category
-            ? `No products found in category "${category}"`
-            : "No products available.",
-        });
+      return res.status(404).json({
+        message: category
+          ? `No products found in category "${category}"`
+          : "No products available.",
+      });
     }
 
-    // Format image to return only the first one
+    // Get user's cart and wishlist if authenticated
+    let cartProductIds = [];
+    let watchlistProductIds = [];
+
+    if (userId) {
+      const cart = await Cart.findOne({ userId });
+      const wishlist = await Wishlist.findOne({ userId }); // renamed variable here
+
+      cartProductIds = cart?.products.map((p) => p.productId.toString()) || [];
+      watchlistProductIds =
+        wishlist?.products.map((p) => p.productId.toString()) || [];
+    }
+
+    // Format product list
     const formattedProducts = products.map((p) => ({
       _id: p._id,
       costPrice: p.costPrice,
-      imageUrl: p.imageUrls?.[0] || "",
+      imageUrls: p.imageUrls || "",
       productCategory: p.productCategory,
       productName: p.productName,
       sellingPrice: p.sellingPrice,
       stock: p.stock,
+      description: p.description || "",
+      inCart: cartProductIds.includes(p._id.toString()),
+      inWatchlist: watchlistProductIds.includes(p._id.toString()),
     }));
 
     return res.status(200).json({
@@ -108,12 +121,9 @@ exports.allProducts = async (req, res) => {
     });
   } catch (error) {
     console.error("Fetch Products Error:", error);
-    return res
-      .status(500)
-      .json({
-        message:
-          "Server error while fetching products. Please try again later.",
-      });
+    return res.status(500).json({
+      message: "Server error while fetching products. Please try again later.",
+    });
   }
 };
 
@@ -128,10 +138,7 @@ exports.productDetails = async (req, res) => {
         .json({ message: "Product ID is required in the URL." });
     }
 
-    const product = await Product.findById(id).populate(
-      "reviews.userId",
-      "name email"
-    );
+    const product = await Product.findById(id);
 
     if (!product) {
       return res
@@ -147,26 +154,35 @@ exports.productDetails = async (req, res) => {
     } = product;
 
     let inCart = false;
+    let inWatchlist = false;
+
     if (userId) {
       const cart = await Cart.findOne({ userId, "products.productId": id });
-      inCart = !!cart;
-    }
-
-    let inWatchlist = false;
-    if (userId) {
-      const watchlist = await Watchlist.findOne({
+      const wishlist = await Wishlist.findOne({
         userId,
         "products.productId": id,
       });
-      inWatchlist = !!watchlist;
+
+      inCart = !!cart;
+      inWatchlist = !!wishlist;
     }
+
+    const formattedReviews = reviews.map((r) => ({
+      _id: r._id,
+      userId: r.userId,
+      username: r.username,
+      title: r.title,
+      description: r.description,
+      rating: r.rating,
+      createdAt: r.createdAt,
+    }));
 
     return res.status(200).json({
       ...product.toObject(),
       rating,
       ratingCount,
       ratingAverage,
-      reviews,
+      reviews: formattedReviews,
       inCart,
       inWatchlist,
     });
@@ -181,7 +197,7 @@ exports.productDetails = async (req, res) => {
 exports.addReview = async (req, res) => {
   try {
     const { productId, rating, title, description } = req.body;
-    const userId = req.user?.userId; // assuming user is authenticated
+    const { userId, username } = req.user; // Assuming authentication middleware sets this
 
     if (!productId || !rating || !title || !description) {
       return res.status(400).json({ message: "All fields are required" });
@@ -195,7 +211,7 @@ exports.addReview = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Optional: Check if user already reviewed the product to prevent duplicates
+    // Check if user already reviewed the product
     const alreadyReviewed = product.reviews.find(
       (r) => r.userId.toString() === userId
     );
@@ -205,9 +221,10 @@ exports.addReview = async (req, res) => {
         .json({ message: "You have already reviewed this product" });
     }
 
-    // Add new review
+    // Add new review with username
     product.reviews.push({
       userId,
+      username,
       title,
       description,
       rating,
@@ -222,13 +239,11 @@ exports.addReview = async (req, res) => {
 
     await product.save();
 
-    return res
-      .status(201)
-      .json({
-        message: "Review added successfully",
-        ratingAverage: product.ratingAverage,
-        ratingCount: product.ratingCount,
-      });
+    return res.status(201).json({
+      message: "Review added successfully",
+      ratingAverage: product.ratingAverage,
+      ratingCount: product.ratingCount,
+    });
   } catch (error) {
     console.error("Add Review Error:", error);
     return res.status(500).json({ message: "Server error" });
@@ -241,21 +256,22 @@ exports.multipleProductDetails = async (req, res) => {
     const userId = req.user?.userId;
 
     if (!Array.isArray(productRequests) || productRequests.length === 0) {
-      return res.status(400).json({ message: "Request must be a non-empty array of productId and quantity." });
+      return res.status(400).json({
+        message: "Request must be a non-empty array of productId and quantity.",
+      });
     }
 
     const productIds = productRequests.map((item) => item.productId);
-    const products = await Product.find({ _id: { $in: productIds } }).populate(
-      "reviews.userId",
-      "name email"
-    );
+    const products = await Product.find({ _id: { $in: productIds } });
 
     if (!products.length) {
-      return res.status(404).json({ message: "No products found for the provided IDs." });
+      return res
+        .status(404)
+        .json({ message: "No products found for the provided IDs." });
     }
 
     const cart = userId ? await Cart.findOne({ userId }) : null;
-    const watchlist = userId ? await Watchlist.findOne({ userId }) : null;
+    const wishlist = userId ? await Wishlist.findOne({ userId }) : null;
 
     const detailedProducts = products.map((product) => {
       const matchingItem = productRequests.find(
@@ -268,9 +284,19 @@ exports.multipleProductDetails = async (req, res) => {
         (p) => p.productId.toString() === product._id.toString()
       );
 
-      const inWatchlist = watchlist?.products.some(
+      const inWatchlist = wishlist?.products.some(
         (p) => p.productId.toString() === product._id.toString()
       );
+
+      const formattedReviews = product.reviews.map((r) => ({
+        _id: r._id,
+        userId: r.userId,
+        username: r.username,
+        title: r.title,
+        description: r.description,
+        rating: r.rating,
+        createdAt: r.createdAt,
+      }));
 
       return {
         ...product.toObject(),
@@ -278,7 +304,7 @@ exports.multipleProductDetails = async (req, res) => {
         rating: product.rating || 0,
         ratingCount: product.ratingCount || 0,
         ratingAverage: product.ratingAverage || 0,
-        reviews: product.reviews || [],
+        reviews: formattedReviews,
         inCart: !!inCart,
         inWatchlist: !!inWatchlist,
       };
@@ -293,5 +319,155 @@ exports.multipleProductDetails = async (req, res) => {
     return res.status(500).json({
       message: "Server error while retrieving product details.",
     });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params; // Get product ID from URL params
+
+    if (!id?.trim()) {
+      return res
+        .status(400)
+        .json({ message: "Product ID is required in the URL." });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ message: "Product not found with the provided ID." });
+    }
+
+    await Product.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Product deleted successfully." });
+  } catch (error) {
+    console.error("Delete Product Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error while deleting product." });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      productName,
+      productCategory,
+      description,
+      costPrice,
+      sellingPrice,
+      stock,
+      imageUrls,
+    } = req.body;
+
+    if (!id?.trim()) {
+      return res
+        .status(400)
+        .json({ message: "Product ID is required in the URL." });
+    }
+
+    if (
+      !productName ||
+      !productCategory ||
+      !description ||
+      !costPrice ||
+      !sellingPrice ||
+      !stock ||
+      !imageUrls ||
+      !Array.isArray(imageUrls)
+    ) {
+      return res.status(400).json({
+        message: "All fields are required and imageUrls must be an array.",
+      });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ message: "Product not found with the provided ID." });
+    }
+
+    product.productName = productName;
+    product.productCategory = productCategory;
+    product.description = description;
+    product.costPrice = costPrice;
+    product.sellingPrice = sellingPrice;
+    product.stock = stock;
+    product.imageUrls = imageUrls;
+
+    await product.save();
+
+    return res
+      .status(200)
+      .json({ message: "Product updated successfully", product });
+  } catch (error) {
+    console.error("Update Product Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error while updating product." });
+  }
+};
+
+exports.getAllReviews = async (req, res) => {
+  try {
+    const products = await Product.find({}).select("reviews");
+
+    const allReviews = products.reduce((acc, product) => {
+      const productReviews = product.reviews.map((review) => ({
+        _id: review._id,
+        userId: review.userId,
+        username: review.username,
+        title: review.title,
+        description: review.description,
+        rating: review.rating,
+        createdAt: review.createdAt,
+        productId: product._id,
+      }));
+      return acc.concat(productReviews);
+    }, []);
+
+    return res.status(200).json({
+      total: allReviews.length,
+      reviews: allReviews,
+    });
+  } catch (error) {
+    console.error("Get All Reviews Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error while fetching reviews." });
+  }
+};
+
+exports.getCategoryStats = async (req, res) => {
+  try {
+    const categoryStats = await Product.aggregate([
+      {
+        $group: {
+          _id: "$productCategory",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          count: 1,
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+    ]);
+
+    return res.status(200).json({ categories: categoryStats });
+  } catch (error) {
+    console.error("Category Stats Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error while fetching categories." });
   }
 };

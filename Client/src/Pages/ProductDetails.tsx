@@ -19,14 +19,14 @@ interface Review {
   title: string;
   description: string;
   createdAt: string;
-  userName?: string;
+  username?: string;
 }
 
 interface Product {
   _id: string;
   productName: string;
   productCategory: string;
-  productDescription: string;
+  description: string;
   imageUrls: string[];
   sellingPrice: number;
   stock: number;
@@ -54,16 +54,22 @@ const ProductDetailsPage = () => {
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewDescription, setReviewDescription] = useState("");
 
+  const buyNow = async (id: string, quantity: number) => {
+    const payload = [{ productId: id, quantity }];
+    localStorage.setItem("cart", JSON.stringify(payload));
+    navigate("/payment");
+  };
+
   const addToWatchlist = async () => {
     if (!product) return;
     setWatchlistLoading(true);
     try {
       await api.addWatchList({ productId: product._id });
       setInWatchlist(true);
-      toast.success("Added to Watchlist ❤️");
+      toast.success("Added to Wishlist ❤️");
     } catch (error) {
-      console.error("Failed to add to watchlist:", error);
-      toast.error("Failed to add to Watchlist");
+      console.error("Failed to add to Wishlist:", error);
+      toast.error("Failed to add to Wishlist");
     } finally {
       setWatchlistLoading(false);
     }
@@ -75,10 +81,10 @@ const ProductDetailsPage = () => {
     try {
       await api.removeFromWatchList(id);
       setInWatchlist(false);
-      toast.info("Removed from Watchlist");
+      toast.info("Removed from Wishlist");
     } catch (error) {
-      console.error("Failed to remove from watchlist:", error);
-      toast.error("Failed to remove from Watchlist");
+      console.error("Failed to remove from Wishlist:", error);
+      toast.error("Failed to remove from Wishlist");
     } finally {
       setWatchlistLoading(false);
     }
@@ -246,7 +252,7 @@ const ProductDetailsPage = () => {
             </p>
 
             <p className="text-gray-700 mb-4 whitespace-pre-line">
-              {product.productDescription}
+              {product.description}
             </p>
 
             {/* Quantity Selector */}
@@ -276,7 +282,7 @@ const ProductDetailsPage = () => {
             {product.stock > 0 && (
               <button
                 className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200 w-full md:w-auto"
-                onClick={() => navigate(`/payment/${id}`)}
+                onClick={() => buyNow(product._id, quantity)}
               >
                 <FaCheckCircle />
                 Buy Now
@@ -296,7 +302,7 @@ const ProductDetailsPage = () => {
               <FaCartPlus />
             </button>
 
-            {/* Watchlist (Heart) */}
+            {/* Wishlist (Heart) */}
             <button
               className={`flex items-center justify-center w-12 h-12 rounded-full transition duration-200 shadow-md ${
                 inWatchlist
@@ -305,7 +311,7 @@ const ProductDetailsPage = () => {
               }`}
               onClick={inWatchlist ? removeFromWatchlist : addToWatchlist}
               disabled={watchlistLoading}
-              title={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+              title={inWatchlist ? "Remove from Wishlist" : "Add to Wishlist"}
             >
               {watchlistLoading ? (
                 <span className="text-gray-400 text-sm">...</span>
@@ -423,7 +429,7 @@ const ProductDetailsPage = () => {
                     </p>
                     <div className="mt-2 text-xs text-gray-500 flex items-center gap-2">
                       <FaUserCircle />
-                      {review.userName || "Anonymous"}
+                      {review.username || "Anonymous"}
                     </div>
                   </div>
                 ))}

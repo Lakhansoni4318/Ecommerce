@@ -1,53 +1,160 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 interface ProductFormProps {
   onCancel: () => void;
   onSave: (product: Product) => void;
+  initialProduct?: Product;
 }
 
 export interface Product {
   productName: string;
   productCategory: string;
-  productDescription: string;
+  description: string;
   costPrice: number;
   sellingPrice: number;
-  stock: string;
+  stock: number | string;
   imageUrls: string[];
 }
 
-const ProductForm: FC<ProductFormProps> = ({ onCancel, onSave }) => {
+const MAX_IMAGES = 4;
+
+const ProductForm: FC<ProductFormProps> = ({
+  onCancel,
+  onSave,
+  initialProduct,
+}) => {
   const [formData, setFormData] = useState<Product>({
-    productName: '',
-    productCategory: '',
-    productDescription: '',
+    productName: "",
+    productCategory: "",
+    description: "",
     costPrice: 0,
     sellingPrice: 0,
-    stock: '',
-    imageUrls: [''],
+    stock: "",
+    imageUrls: [""],
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    if (initialProduct) {
+      setFormData({
+        productName: initialProduct.productName || "",
+        productCategory: initialProduct.productCategory || "",
+        description: initialProduct.description || "",
+        costPrice: initialProduct.costPrice || 0,
+        sellingPrice: initialProduct.sellingPrice || 0,
+        stock: initialProduct.stock || "",
+        imageUrls:
+          Array.isArray(initialProduct.imageUrls) &&
+          initialProduct.imageUrls.length > 0
+            ? initialProduct.imageUrls
+            : [""],
+      });
+    }
+  }, [initialProduct]);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "stock" ? value : value,
+    }));
   };
 
   const handleImageUrlChange = (index: number, value: string) => {
     const updatedImages = [...formData.imageUrls];
     updatedImages[index] = value;
-    setFormData(prev => ({ ...prev, imageUrls: updatedImages }));
+    setFormData((prev) => ({ ...prev, imageUrls: updatedImages }));
   };
 
   const addImageField = () => {
-    setFormData(prev => ({ ...prev, imageUrls: [...prev.imageUrls, ''] }));
+    if (formData.imageUrls.length < MAX_IMAGES) {
+      setFormData((prev) => ({ ...prev, imageUrls: [...prev.imageUrls, ""] }));
+    }
+  };
+
+  // ...inside ProductForm component
+
+  const handleRemoveImageField = (index: number) => {
+    if (formData.imageUrls.length > 1) {
+      const updatedImages = [...formData.imageUrls];
+      updatedImages.splice(index, 1);
+      setFormData((prev) => ({ ...prev, imageUrls: updatedImages }));
+    }
+  };
+
+  // Modified validateForm()
+  const validateForm = (): boolean => {
+    const {
+      productName,
+      productCategory,
+      description,
+      costPrice,
+      sellingPrice,
+      stock,
+      imageUrls,
+    } = formData;
+
+    if (!productName.trim()) {
+      toast.error("Product name is required");
+      return false;
+    }
+
+    if (!productCategory.trim()) {
+      toast.error("Product category is required");
+      return false;
+    }
+
+    if (!description.trim()) {
+      toast.error("Description is required");
+      return false;
+    }
+
+    if (costPrice <= 0) {
+      toast.error("Cost price must be greater than 0");
+      return false;
+    }
+
+    if (sellingPrice <= 0) {
+      toast.error("Selling price must be greater than 0");
+      return false;
+    }
+
+    if (!stock || Number(stock) <= 0) {
+      toast.error("Stock quantity must be greater than 0");
+      return false;
+    }
+
+    if (
+      imageUrls.length === 0 ||
+      imageUrls.length > MAX_IMAGES ||
+      imageUrls.some((url) => !url.trim())
+    ) {
+      toast.error("All image URLs must be filled and non-empty");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = () => {
-    onSave(formData);
+    const isValid = validateForm();
+    if (!isValid) return; // ✅ Prevents onSave() and toast if validation fails
+
+    onSave({
+      ...formData,
+      stock: Number(formData.stock),
+    });
+
+    toast.success("Product saved successfully");
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow space-y-6">
-      {/* Basic Details */}
+      {/* Product Name & Category */}
       <div className="flex flex-col md:flex-row md:space-x-6">
         <div className="flex-1">
           <label className="block mb-2 font-semibold">Product Name</label>
@@ -83,8 +190,8 @@ const ProductForm: FC<ProductFormProps> = ({ onCancel, onSave }) => {
       <div>
         <label className="block mb-2 font-semibold">Description</label>
         <textarea
-          name="productDescription"
-          value={formData.productDescription}
+          name="description"
+          value={formData.description}
           onChange={handleChange}
           placeholder="Enter product description"
           className="w-full p-2 border border-gray-300 rounded-md"
@@ -129,28 +236,42 @@ const ProductForm: FC<ProductFormProps> = ({ onCancel, onSave }) => {
         </div>
       </div>
 
-      {/* Multiple Image URLs */}
+      {/* Image URLs */}
+      {/* Image URLs */}
       <div>
         <label className="block mb-2 font-semibold">Image URLs</label>
         <div className="space-y-2">
           {formData.imageUrls.map((url, index) => (
-            <input
-              key={index}
-              type="text"
-              value={url}
-              onChange={e => handleImageUrlChange(index, e.target.value)}
-              placeholder={`Image URL ${index + 1}`}
-              className="w-full p-2 border border-gray-300 rounded-md"
-            />
+            <div key={index} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                placeholder={`Image URL ${index + 1}`}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+              {formData.imageUrls.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImageField(index)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete this image URL"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={addImageField}
-          className="mt-2 text-sm text-blue-600 hover:underline"
-        >
-          + Add another image
-        </button>
+        {formData.imageUrls.length < MAX_IMAGES && (
+          <button
+            type="button"
+            onClick={addImageField}
+            className="mt-2 text-sm text-blue-600 hover:underline"
+          >
+            + Add another image
+          </button>
+        )}
       </div>
 
       {/* Actions */}

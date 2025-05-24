@@ -1,4 +1,4 @@
-const Watchlist = require('../models/watchlistModel');
+const Wishlist = require('../models/watchlistModel');
 const Product = require('../models/productModel');
 
 exports.addToWatchlist = async (req, res) => {
@@ -15,30 +15,30 @@ exports.addToWatchlist = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    let watchlist = await Watchlist.findOne({ userId });
+    let wishlist = await Wishlist.findOne({ userId });
 
-    if (!watchlist) {
-      watchlist = new Watchlist({
+    if (!wishlist) {
+      wishlist = new Wishlist({
         userId,
         products: [{ productId }],
       });
     } else {
-      const productExists = watchlist.products.some(
+      const productExists = wishlist.products.some(
         (item) => item.productId.toString() === productId
       );
 
       if (productExists) {
-        return res.status(400).json({ message: 'Product is already in your watchlist' });
+        return res.status(400).json({ message: 'Product is already in your Wishlist' });
       }
 
-      watchlist.products.push({ productId });
+      wishlist.products.push({ productId });
     }
 
-    await watchlist.save();
-    return res.status(200).json({ message: 'Product added to watchlist', watchlist });
+    await wishlist.save();
+    return res.status(200).json({ message: 'Product added to Wishlist', wishlist });
 
   } catch (error) {
-    console.error('Add to Watchlist Error:', error);
+    console.error('Add to Wishlist Error:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -48,26 +48,26 @@ exports.removeFromWatchlist = async (req, res) => {
     const userId = req.user._id;
     const { productId } = req.params;
 
-    let watchlist = await Watchlist.findOne({ userId });
+    let wishlist = await Wishlist.findOne({ userId });
 
-    if (!watchlist) {
-      return res.status(404).json({ message: 'Watchlist not found' });
+    if (!wishlist) {
+      return res.status(404).json({ message: 'Wishlist not found' });
     }
 
-    const initialCount = watchlist.products.length;
-    watchlist.products = watchlist.products.filter(
+    const initialCount = wishlist.products.length;
+    wishlist.products = wishlist.products.filter(
       (item) => item.productId.toString() !== productId
     );
 
-    if (watchlist.products.length === initialCount) {
-      return res.status(404).json({ message: 'Product not found in watchlist' });
+    if (wishlist.products.length === initialCount) {
+      return res.status(404).json({ message: 'Product not found in Wishlist' });
     }
 
-    await watchlist.save();
-    return res.status(200).json({ message: 'Product removed from watchlist', watchlist });
+    await wishlist.save();
+    return res.status(200).json({ message: 'Product removed from Wishlist', wishlist });
 
   } catch (error) {
-    console.error('Remove from Watchlist Error:', error);
+    console.error('Remove from Wishlist Error:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -76,16 +76,16 @@ exports.getWatchlist = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const watchlist = await Watchlist.findOne({ userId }).populate('products.productId');
+    const wishlist = await Wishlist.findOne({ userId }).populate('products.productId');
 
-    if (!watchlist) {
-      return res.status(200).json({ products: [] });
+    if (!wishlist || wishlist.products.length === 0) {
+      return res.status(404).json({ message: 'Wishlist is empty or not found' });
     }
 
-    return res.status(200).json({ products: watchlist.products });
-
+    // Return the Wishlist with populated product info
+    return res.status(200).json({ wishlist });
   } catch (error) {
-    console.error('Get Watchlist Error:', error);
+    console.error('Get Wishlist Error:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };

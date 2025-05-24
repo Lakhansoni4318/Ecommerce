@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   accountType: {
     type: String,
     required: true,
-    enum: ['User', 'Seller'],
+    enum: ["User", "Seller"],
   },
   otp: {
     type: String,
@@ -31,6 +31,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  phone: { type: String },
+  address: { type: String },
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

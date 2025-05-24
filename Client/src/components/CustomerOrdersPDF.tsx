@@ -8,6 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
+// Styles
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -74,14 +75,19 @@ const styles = StyleSheet.create({
   },
 });
 
+// Interfaces
+interface Product {
+  name: string;
+  price: number;
+  image: string;
+  variant?: string;
+  quantity?: number;
+}
+
 interface Order {
   _id: string;
-  product: {
-    name: string;
-    price: number;
-    image: string;
-    variant?: string;
-  };
+  product?: Product; // for customer
+  products?: Product[]; // for seller
   orderTime: string;
   paymentType: string;
   paymentDetails?: {
@@ -94,13 +100,29 @@ interface Props {
   user: {
     username: string;
     email: string;
-    accountType: string;
+    accountType: "customer" | "seller";
   };
   orders: Order[];
 }
 
 const CustomerInvoicePDF: React.FC<Props> = ({ user, orders }) => {
-  const total = orders.reduce((sum, order) => sum + order.product.price, 0);
+  const isSeller = user.accountType === "seller";
+
+  // Calculate total sales or spending
+  const total = orders.reduce((sum, order) => {
+    const productList = isSeller
+      ? order.products || []
+      : order.product
+      ? [order.product]
+      : [];
+    return (
+      sum +
+      productList.reduce((acc, product) => {
+        const quantity = product.quantity ?? 1;
+        return acc + product.price * quantity;
+      }, 0)
+    );
+  }, 0);
 
   return (
     <Document>
@@ -108,37 +130,75 @@ const CustomerInvoicePDF: React.FC<Props> = ({ user, orders }) => {
         {/* Header */}
         <View style={styles.headerContainer}>
           <Image style={styles.logo} src="https://via.placeholder.com/100" />
-          <Text style={styles.title}>Order Summary for {user.username}</Text>
+          <Text style={styles.title}>
+            {isSeller
+              ? `Sales Report for ${user.username}`
+              : `Order Report for ${user.username}`}
+          </Text>
         </View>
 
-        {/* Customer Info */}
+        {/* User Info */}
         <View style={styles.userInfo}>
-          <Text style={styles.label}>Customer Email: <Text>{user.email}</Text></Text>
-          <Text style={styles.label}>Account Type: <Text>{user.accountType}</Text></Text>
+          <Text style={styles.label}>
+            Email: <Text>{user.email}</Text>
+          </Text>
+          <Text style={styles.label}>
+            Account Type: <Text>{user.accountType}</Text>
+          </Text>
         </View>
 
-        {/* Orders */}
-        {orders.map((order, index) => (
-          <View key={order._id} style={styles.orderBox}>
-            <Image src={order.product.image} style={styles.productImage} />
-            <View style={styles.orderDetails}>
-              <Text style={styles.orderItem}><Text style={styles.boldText}>Order #{index + 1}</Text></Text>
-              <Text style={styles.orderItem}><Text style={styles.boldText}>Product:</Text> {order.product.name} {order.product.variant ? `(${order.product.variant})` : ""}</Text>
-              <Text style={styles.orderItem}><Text style={styles.boldText}>Price:</Text> ₹{order.product.price}</Text>
-              <Text style={styles.orderItem}><Text style={styles.boldText}>Order Date:</Text> {new Date(order.orderTime).toLocaleString()}</Text>
-              <Text style={styles.orderItem}><Text style={styles.boldText}>Address:</Text> {order.address}</Text>
-              <Text style={styles.orderItem}>
-                <Text style={styles.boldText}>Payment Type:</Text> {order.paymentType}
-                {order.paymentType !== "cash" && order.paymentDetails
-                  ? ` (Card ending ${order.paymentDetails.cardNumber.slice(-4)})`
-                  : ""}
-              </Text>
-            </View>
-          </View>
-        ))}
+        {/* Product Orders */}
+        {orders.map((order, index) => {
+          const productList = isSeller
+            ? order.products || []
+            : order.product
+            ? [order.product]
+            : [];
 
-        {/* Footer Total */}
-        <Text style={styles.footer}>Total Spent: ₹{total}</Text>
+          return productList.map((product, i) => (
+            <View key={`${order._id}_${i}`} style={styles.orderBox}>
+              <Image src={product.image} style={styles.productImage} />
+              <View style={styles.orderDetails}>
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Order #{index + 1}</Text>
+                </Text>
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Product:</Text> {product.name}
+                </Text>
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Price:</Text> ₹{product.price}
+                </Text>
+                {product.quantity && (
+                  <Text style={styles.orderItem}>
+                    <Text style={styles.boldText}>Quantity:</Text>{" "}
+                    {product.quantity}
+                  </Text>
+                )}
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Order Date:</Text>{" "}
+                  {new Date(order.orderTime).toLocaleString()}
+                </Text>
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Address:</Text> {order.address}
+                </Text>
+                <Text style={styles.orderItem}>
+                  <Text style={styles.boldText}>Payment Type:</Text>{" "}
+                  {order.paymentType}
+                  {order.paymentType !== "cash" && order.paymentDetails
+                    ? ` (Card ending ${order.paymentDetails.cardNumber.slice(
+                        -4
+                      )})`
+                    : ""}
+                </Text>
+              </View>
+            </View>
+          ));
+        })}
+
+        {/* Total */}
+        <Text style={styles.footer}>
+          {isSeller ? "Total Sales" : "Total Spent"}: ₹{total}
+        </Text>
       </Page>
     </Document>
   );

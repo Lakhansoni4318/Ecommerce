@@ -27,7 +27,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/cart', cartRoutes);
-app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/Wishlist', watchlistRoutes);
 app.use('/api/orders', orderRoutes);
 app.use("/api/stats", statsRoute);
 

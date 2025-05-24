@@ -5,25 +5,43 @@ const Product = require("../models/productModel");
 exports.getSummary = async (req, res) => {
   try {
     const totalProducts = await Product.countDocuments();
-    const totalCustomers = await User.countDocuments({ role: "User" });
 
-    const orders = await Order.find({}).populate("product", "price");
+    // Count users and sellers separately
+    const totalUsers = await User.countDocuments({ accountType: "User" });
+    const totalSellers = await User.countDocuments({ accountType: "Seller" });
+
+    const orders = await Order.find({});
 
     const totalSales = orders.reduce((sum, order) => {
-      return sum + (order.product ? order.product.price : 0);
+      const orderTotal = order.products.reduce((orderSum, prod) => {
+        return orderSum + prod.price * prod.quantity;
+      }, 0);
+      return sum + orderTotal;
     }, 0);
 
-    const allRatings = await Product.find({}, "ratingAverage");
-    const ratingSum = allRatings.reduce((sum, product) => sum + (product.ratingAverage || 0), 0);
-    
-    // Keep averageRating as number rounded to 2 decimals or 0 if no ratings
-    const averageRating = allRatings.length ? +(ratingSum / allRatings.length).toFixed(2) : 0;
+    // Get rating info
+    const allProducts = await Product.find({}, "ratingAverage reviews");
+    const ratingSum = allProducts.reduce(
+      (sum, product) => sum + (product.ratingAverage || 0),
+      0
+    );
+    const averageRating = allProducts.length
+      ? +(ratingSum / allProducts.length).toFixed(2)
+      : 0;
+
+    // Calculate total reviews by summing length of reviews array on each product
+    const totalReviews = allProducts.reduce(
+      (sum, product) => sum + (product.reviews?.length || 0),
+      0
+    );
 
     res.status(200).json({
       totalProducts,
+      totalUsers,
+      totalSellers,
       totalSales,
-      totalCustomers,
       averageRating,
+      totalReviews,
     });
   } catch (error) {
     console.error("Error fetching summary:", error);

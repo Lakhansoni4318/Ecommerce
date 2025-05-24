@@ -6,11 +6,13 @@ type Product = {
   productName: string;
   productCategory: string;
   stock: number;
-  imageUrl: string;
+  imageUrls: string[];
   costPrice: number;
   sellingPrice: number;
   rating: number;
   quantity: number;
+  inCart: boolean;
+  inWatchlist: boolean;
   _id: number;
 };
 
@@ -68,10 +70,12 @@ const FeaturedProducts = () => {
             productName={product.productName}
             productCategory={product.productCategory}
             stock={product.stock.toString()}
-            imageUrl={product.imageUrl}
+            imageUrls={product.imageUrls}
             costPrice={product.costPrice}
             sellingPrice={product.sellingPrice}
             rating={product.rating}
+            inCart={product.inCart}
+            inWatchlist={product.inWatchlist}
             quantity={product.quantity}
             _id={product._id}
           />

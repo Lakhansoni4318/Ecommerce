@@ -1,73 +1,102 @@
-import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import SidebarFilters from "../components/FilterSidebar";
-import ProductCard from "../components/ProductCard";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/apiService";
 
 type Product = {
+  _id: string;
   productName: string;
-  productCategory: string;
-  stock: number;
-  imageUrl: string;
-  costPrice: number;
+  description: string;
+  imageUrls: string[];
   sellingPrice: number;
-  rating: number;
-  quantity: number;
-  _id: number;
+  costPrice: number;
 };
 
-export default function ProductListPage() {
-  const { categoryName } = useParams();
-  const [filters, setFilters] = useState<any>({});
+const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const { categoryName } = useParams();
+  const navigate = useNavigate();
+
+  const buyNow = async (id: string, quantity: number) => {
+    const payload = [{ productId: id, quantity }];
+    localStorage.setItem("cart", JSON.stringify(payload));
+    navigate("/payment");
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        let request = {
-          category: categoryName,
-        };
+        const request = { category: categoryName };
         const response = await api.fetchAllProducts(request);
-        setProducts(response.data.products);
+        setProducts(response.data.products || []);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [categoryName]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6">
-        <SidebarFilters
-          filters={filters}
-          setFilters={setFilters}
-          showCategoryFilter={!categoryName}
-        />
+    <div className="bg-rose-50 py-12 px-4 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-center text-rose-600 mb-8 capitalize">
+          {categoryName} Products
+        </h1>
 
-        <main className="flex-1 bg-white p-6 rounded-2xl shadow-md">
-          <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-            {categoryName ? `${categoryName} Products` : "Product List"}
-          </h1>
+        {products.length === 0 ? (
+          <p className="text-center text-gray-500">No products found.</p>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product, index) => (
-              <ProductCard
-                key={index}
-                productName={product.productName}
-                productCategory={product.productCategory}
-                stock={product.stock.toString()}
-                imageUrl={product.imageUrl}
-                costPrice={product.costPrice}
-                sellingPrice={product.sellingPrice}
-                rating={product.rating}
-                quantity={product.quantity}
-                _id={product._id}
-              />
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col cursor-pointer"
+                onClick={() => navigate(`/product/${product._id}`)}
+              >
+                <div className="w-full aspect-[3/4] bg-gray-100 overflow-hidden">
+                  <img
+                    src={product.imageUrls[0]}
+                    alt={product.productName}
+                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 bg-white"
+                  />
+                </div>
+
+                <div className="p-4 flex flex-col flex-grow">
+                  <h2 className="text-lg font-semibold text-gray-800 line-clamp-2">
+                    {product.productName}
+                  </h2>
+
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2 flex-grow">
+                    {product.description}
+                  </p>
+
+                  <div className="mt-3">
+                    <span className="text-rose-600 font-bold text-lg">
+                      ₹{product.sellingPrice.toLocaleString()}
+                    </span>
+                    <span className="text-sm line-through text-gray-400 ml-2">
+                      ₹{product.costPrice.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Prevent click propagation so Buy Now doesn't trigger card navigation */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      buyNow(product._id, 1);
+                    }}
+                    className="mt-4 w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    Buy Now
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
-        </main>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default ProductList;

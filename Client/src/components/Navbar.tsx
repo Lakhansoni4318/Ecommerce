@@ -83,10 +83,17 @@ const Navbar = () => {
                       My Profile
                     </li>
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
-                      My Orders
+                      <Link to="/order" onClick={() => setSidebarOpen(false)}>
+                        My Orders
+                      </Link>
                     </li>
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
-                      Wishlist
+                      <Link
+                        to="/Wishlist"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        Wishlist
+                      </Link>
                     </li>
                     <hr />
                     {isSeller && (
@@ -175,7 +182,7 @@ const Navbar = () => {
                 </li>
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
                   <FontAwesomeIcon icon={faHeart} className="mr-3" />
-                  <Link to="/watchlist" onClick={() => setSidebarOpen(false)}>
+                  <Link to="/Wishlist" onClick={() => setSidebarOpen(false)}>
                     Wishlist
                   </Link>
                 </li>
@@ -199,10 +206,15 @@ const Navbar = () => {
                 {isLoggedIn ? (
                   <>
                     <li className="text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                      Profile
+                      <Link to="/profile" onClick={() => setSidebarOpen(false)}>
+                        <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
+                        Profile
+                      </Link>
                     </li>
                     <li className="text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                      Orders
+                      <Link to="/order" onClick={() => setSidebarOpen(false)}>
+                        Orders
+                      </Link>
                     </li>
                     {isSeller && (
                       <li className="text-black hover:bg-blue-200 p-2 rounded cursor-pointer">

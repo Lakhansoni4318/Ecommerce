@@ -1,16 +1,38 @@
-import { FaTv, FaTshirt, FaBook, FaHome, FaHeartbeat, FaPuzzlePiece } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { FaTv, FaTshirt, FaBook, FaHome, FaHeartbeat, FaPuzzlePiece } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import api from "../../api/apiService";
 
-const categories = [
-  { icon: <FaTv className="text-4xl text-rose-600 mb-4" />, name: 'Electronics', count: '1,234' },
-  { icon: <FaTshirt className="text-4xl text-rose-600 mb-4" />, name: 'Fashion', count: '2,456' },
-  { icon: <FaBook className="text-4xl text-rose-600 mb-4" />, name: 'Books', count: '789' },
-  { icon: <FaHome className="text-4xl text-rose-600 mb-4" />, name: 'Home', count: '1,012' },
-  { icon: <FaHeartbeat className="text-4xl text-rose-600 mb-4" />, name: 'Beauty', count: '654' },
-  { icon: <FaPuzzlePiece className="text-4xl text-rose-600 mb-4" />, name: 'Toys & Games', count: '1,234' },
-];
+const iconMap:any = {
+  Electronics: <FaTv className="text-4xl text-rose-600 mb-4" />,
+  Fashion: <FaTshirt className="text-4xl text-rose-600 mb-4" />,
+  Books: <FaBook className="text-4xl text-rose-600 mb-4" />,
+  Home: <FaHome className="text-4xl text-rose-600 mb-4" />,
+  Beauty: <FaHeartbeat className="text-4xl text-rose-600 mb-4" />,
+  "Toys & Games": <FaPuzzlePiece className="text-4xl text-rose-600 mb-4" />,
+};
+
+type Category = {
+  name: string;
+  count: number;
+};
 
 const TrendingCategories = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategoryStats = async () => {
+      try {
+        const response = await api.getCategoryStats();
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error("Error fetching category stats:", error);
+      }
+    };
+
+    fetchCategoryStats();
+  }, []);
+
   return (
     <div className="w-full bg-rose-50 py-12 px-6 my-12">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between mb-10 px-4">
@@ -32,7 +54,9 @@ const TrendingCategories = () => {
             key={category.name}
             className="bg-white p-6 rounded-2xl shadow-md flex flex-col items-center text-center hover:bg-rose-100 transition-all cursor-pointer"
           >
-            {category.icon}
+            {iconMap[category.name] || (
+              <FaPuzzlePiece className="text-4xl text-rose-600 mb-4" />
+            )}
             <h3 className="text-lg font-semibold text-gray-800">{category.name}</h3>
             <p className="text-gray-500 mt-2">{category.count} Products</p>
           </Link>

@@ -140,3 +140,41 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.checkToken = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ valid: false, message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return res.status(200).json({ valid: true, message: 'Token is valid', decoded });
+  } catch (error) {
+    return res.status(401).json({ valid: false, message: 'Token is invalid or expired' });
+  }
+};
+
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id; 
+    const { username, phone, address, accountType } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username, phone, address, accountType },
+      { new: true, runValidators: true }
+    ).select('-password -otp -otpExpiration');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json({ user: updatedUser });
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
