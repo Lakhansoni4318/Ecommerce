@@ -19,19 +19,13 @@ const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-    const userString = localStorage.getItem("user");
-    const user = userString ? JSON.parse(userString) : null;
-  const accountType = user?.accountType || null;
+  
   useEffect(() => {
     const userString = localStorage.getItem("user");
     const user = userString ? JSON.parse(userString) : null;
     setIsSeller(user?.accountType === "Seller");
     setIsLoggedIn(!!localStorage.getItem("token"));
   }, [token]);
-
-    useEffect(() => {
-    setIsSeller(accountType === "Seller");
-  }, [accountType]);
 
   const handleLogout = () => {
     localStorage.clear();
