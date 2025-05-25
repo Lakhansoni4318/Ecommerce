@@ -18,14 +18,23 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const userString = localStorage.getItem("user");
-    const user = userString ? JSON.parse(userString) : null;
-    setIsSeller(user?.accountType === "Seller");
-    setIsLoggedIn(!!localStorage.getItem("token"));
-  }, [token]);
+    const checkUserStatus = () => {
+      const token = localStorage.getItem("token");
+      const userString = localStorage.getItem("user");
+      const user = userString ? JSON.parse(userString) : null;
+
+      setIsLoggedIn(!!token);
+      setIsSeller(user?.accountType === "Seller");
+    };
+    checkUserStatus();
+    window.addEventListener("storage", checkUserStatus);
+
+    return () => {
+      window.removeEventListener("storage", checkUserStatus);
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -80,7 +89,7 @@ const Navbar = () => {
                   <ul className="p-4 space-y-3 text-gray-700">
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
                       <Link to="/profile" onClick={() => setSidebarOpen(false)}>
-                      My Profile
+                        My Profile
                       </Link>
                     </li>
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
@@ -171,19 +180,19 @@ const Navbar = () => {
               <ul className="space-y-4">
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
                   <Link to="/" onClick={() => setSidebarOpen(false)}>
-                  <FontAwesomeIcon icon={faHome} className="mr-3" />
+                    <FontAwesomeIcon icon={faHome} className="mr-3" />
                     Home
                   </Link>
                 </li>
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
                   <Link to="/Wishlist" onClick={() => setSidebarOpen(false)}>
-                  <FontAwesomeIcon icon={faHeart} className="mr-3" />
+                    <FontAwesomeIcon icon={faHeart} className="mr-3" />
                     Wishlist
                   </Link>
                 </li>
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
                   <Link to="/cart" onClick={() => setSidebarOpen(false)}>
-                  <FontAwesomeIcon icon={faShoppingCart} className="mr-3" />
+                    <FontAwesomeIcon icon={faShoppingCart} className="mr-3" />
                     Cart
                   </Link>
                 </li>
