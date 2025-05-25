@@ -175,7 +175,7 @@ exports.createOrder = async (req, res) => {
           <p><strong>Payment Method:</strong> ${paymentType}</p>
           <p>We will notify you once your order is shipped.</p>
           <br />
-          <p>Best regards,<br />Your Company Name</p>
+          <p>Best regards,<br />ShopEase</p>
         `,
       };
 

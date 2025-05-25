@@ -193,7 +193,7 @@ const CustomerInvoice: React.FC<Props> = ({ order }) => {
             style={styles.logo}
             src="https://via.placeholder.com/60" // Replace with your logo URL
           />
-          <Text style={styles.title}>Eroam Store - Invoice</Text>
+          <Text style={styles.title}>ShopEase Store - Invoice</Text>
         </View>
 
         {/* Customer & Order Info */}
@@ -282,7 +282,7 @@ const CustomerInvoice: React.FC<Props> = ({ order }) => {
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Thank you for shopping with Eroam Store! We appreciate your business.
+          Thank you for shopping with ShopEase Store! We appreciate your business.
         </Text>
       </Page>
     </Document>

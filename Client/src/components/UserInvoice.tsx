@@ -77,7 +77,7 @@ const InvoiceDocument = ({ order }: any) => (
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.companyName}>Lakhan E-Commerce</Text>
+        <Text style={styles.companyName}>ShopEase</Text>
         <Text style={styles.invoiceTitle}>Invoice</Text>
       </View>
 
