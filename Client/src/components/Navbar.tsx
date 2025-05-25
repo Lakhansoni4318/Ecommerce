@@ -18,23 +18,14 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const userString = localStorage.getItem("user");
 
   useEffect(() => {
-    const checkUserStatus = () => {
-      const token = localStorage.getItem("token");
-      const userString = localStorage.getItem("user");
-      const user = userString ? JSON.parse(userString) : null;
-
-      setIsLoggedIn(!!token);
-      setIsSeller(user?.accountType === "Seller");
-    };
-    checkUserStatus();
-    window.addEventListener("storage", checkUserStatus);
-
-    return () => {
-      window.removeEventListener("storage", checkUserStatus);
-    };
-  }, []);
+    const user = userString ? JSON.parse(userString) : null;
+    setIsSeller(user?.accountType === "Seller");
+    setIsLoggedIn(!!localStorage.getItem("token"));
+  }, [token, userString]);
 
   const handleLogout = () => {
     localStorage.clear();
