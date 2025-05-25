@@ -35,7 +35,20 @@ const Cart = () => {
   const fetchCart = async () => {
     try {
       const res = await api.getCart();
-      setCartItems(res.data.cart?.products || []);
+      const products = res.data.cart?.products || [];
+
+      const validItems = products.filter(
+        (item: CartItem) => item.productId !== null
+      );
+      const invalidItems = products.filter(
+        (item: CartItem) => item.productId === null
+      );
+
+      if (invalidItems.length) {
+        console.warn("Invalid cart items found and ignored:", invalidItems);
+      }
+
+      setCartItems(validItems);
     } catch (error) {
       console.error("Failed to fetch cart:", error);
     } finally {
@@ -85,7 +98,7 @@ const Cart = () => {
     }
   };
 
-  const buyNow = async (id:string, quantity:number) => {
+  const buyNow = async (id: string, quantity: number) => {
     const payload = [{ productId: id, quantity }];
     localStorage.setItem("cart", JSON.stringify(payload));
     navigate("/payment");
@@ -151,16 +164,16 @@ const Cart = () => {
                 className="border rounded-xl shadow-lg hover:shadow-xl transition bg-white p-4 flex flex-col justify-between"
               >
                 <img
-                  src={item.productId.imageUrls[0]}
+                  src={item?.productId?.imageUrls[0]}
                   alt={item.productId.productName}
                   className="w-full h-48 object-cover rounded-md mb-4"
                 />
                 <div className="flex flex-col gap-1">
                   <h3 className="text-lg font-semibold text-gray-800">
-                    {item.productId.productName}
+                    {item?.productId.productName}
                   </h3>
                   <div className="text-sm text-yellow-600">
-                    ⭐ {item.productId.ratingAverage} (
+                    ⭐ {item.productId?.ratingAverage} (
                     {item.productId.ratingCount})
                   </div>
                   <div className="text-gray-700">

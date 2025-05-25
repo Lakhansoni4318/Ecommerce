@@ -5,7 +5,6 @@ import {
   faShoppingCart,
   faBars,
   faHome,
-  faList,
   faHeart,
   faSignInAlt,
   faUserPlus,
@@ -80,7 +79,9 @@ const Navbar = () => {
                 <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-20">
                   <ul className="p-4 space-y-3 text-gray-700">
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
+                      <Link to="/profile" onClick={() => setSidebarOpen(false)}>
                       My Profile
+                      </Link>
                     </li>
                     <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
                       <Link to="/order" onClick={() => setSidebarOpen(false)}>
@@ -169,26 +170,20 @@ const Navbar = () => {
               <h4 className="text-lg font-semibold text-black mb-4">Browse</h4>
               <ul className="space-y-4">
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                  <FontAwesomeIcon icon={faHome} className="mr-3" />
                   <Link to="/" onClick={() => setSidebarOpen(false)}>
+                  <FontAwesomeIcon icon={faHome} className="mr-3" />
                     Home
                   </Link>
                 </li>
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                  <FontAwesomeIcon icon={faList} className="mr-3" />
-                  <Link to="/categories" onClick={() => setSidebarOpen(false)}>
-                    Categories
-                  </Link>
-                </li>
-                <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                  <FontAwesomeIcon icon={faHeart} className="mr-3" />
                   <Link to="/Wishlist" onClick={() => setSidebarOpen(false)}>
+                  <FontAwesomeIcon icon={faHeart} className="mr-3" />
                     Wishlist
                   </Link>
                 </li>
                 <li className="flex items-center text-black hover:bg-blue-200 p-2 rounded cursor-pointer">
-                  <FontAwesomeIcon icon={faShoppingCart} className="mr-3" />
                   <Link to="/cart" onClick={() => setSidebarOpen(false)}>
+                  <FontAwesomeIcon icon={faShoppingCart} className="mr-3" />
                     Cart
                   </Link>
                 </li>

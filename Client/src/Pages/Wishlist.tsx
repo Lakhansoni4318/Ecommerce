@@ -27,9 +27,7 @@ const Wishlist = () => {
     const fetchWishlist = async () => {
       try {
         const response = await api.getWatchList();
-        // response.data.Wishlist.products is an array of WatchlistProduct
-        // Extract productId from each to get Product info
-        const products: Product[] = response.data.Wishlist.products.map(
+        const products: Product[] = response.data.wishlist.products.map(
           (item: WatchlistProduct) => item.productId
         );
         setWishlist(products);

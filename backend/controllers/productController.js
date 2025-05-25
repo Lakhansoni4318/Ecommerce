@@ -1,6 +1,7 @@
 const Product = require("../models/productModel");
 const Cart = require("../models/CartModel");
 const Wishlist = require("../models/watchlistModel");
+const User = require("../models/userModel"); 
 
 exports.addProduct = async (req, res) => {
   const {
@@ -197,11 +198,12 @@ exports.productDetails = async (req, res) => {
 exports.addReview = async (req, res) => {
   try {
     const { productId, rating, title, description } = req.body;
-    const { userId, username } = req.user; // Assuming authentication middleware sets this
+    const { userId } = req.user;
 
     if (!productId || !rating || !title || !description) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
     if (rating < 1 || rating > 5) {
       return res
         .status(400)
@@ -209,9 +211,10 @@ exports.addReview = async (req, res) => {
     }
 
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
-    // Check if user already reviewed the product
     const alreadyReviewed = product.reviews.find(
       (r) => r.userId.toString() === userId
     );
@@ -221,21 +224,24 @@ exports.addReview = async (req, res) => {
         .json({ message: "You have already reviewed this product" });
     }
 
-    // Add new review with username
+    // Fetch username from User collection
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Add review
     product.reviews.push({
       userId,
-      username,
+      username: user.username,
       title,
       description,
       rating,
     });
 
-    // Update rating info
     product.ratingCount += 1;
     product.ratingSum += rating;
-    product.ratingAverage = +(product.ratingSum / product.ratingCount).toFixed(
-      2
-    );
+    product.ratingAverage = +(product.ratingSum / product.ratingCount).toFixed(2);
 
     await product.save();
 
