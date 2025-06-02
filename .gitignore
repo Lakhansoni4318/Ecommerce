@@ -1,0 +1,15 @@
+client/node_modules/
+backend/node_modules/
+
+# Build outputs
+client/dist/
+client/build/
+backend/dist/
+backend/build/
+
+# Logs
+**/*.log
+
+# Environment variables
+client/.env
+backend/.env
